@@ -3,7 +3,7 @@ module github.com/vlasove/shippy/shippy-cli-consignment
 go 1.15
 
 require (
-	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/golang/protobuf v1.4.2
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
 	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6 // indirect
 	golang.org/x/text v0.3.3 // indirect
