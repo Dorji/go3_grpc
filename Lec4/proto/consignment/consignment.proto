@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package consignment;
+//Обозначение именованного набора полей
+message Request {
+    string body = 1; //тип имя = номер поля;
+    int32 age = 2; //тип целый 32 разр //go -> int32
+    int64 salary = 3; // тип целый 64 разр // go -> int64
+
+}
+
+message Respone {
+    double my_double = 1; //go -> float64
+    float my_float = 2; //go -> float32 
+
+    uint32 my_uint32 = 3; // go -> uint32
+    uint64 my_uint64 = 4; //go -> iont64
+
+    fixed32 my_fixed32 =5; // Поле для хранения байтовых последовательности с разрядом до 32 //go -> uint32
+
+    bool my_bool = 6; // go -> bool 
+    string my_string = 7; // go -> string //proto2 go -> []byte
+
+    bytes my_bytes = 8; //go -> []byte
+
+    enum Things {
+        FIRST = 0;
+        SECOND = 1;
+        THIRD = 3;
+        FOURTH = 4;
+    }
+    Things things = 9;
+    Request req = 10;
+
+    repeated Request snippet = 11;//go -> []Request
+
+
+}
+
+message OuterSearcher {
+    message InnerSearcher {
+        int32 code = 1;
+        string url = 2;
+    }
+    repeated InnerSearcher result = 1;
+}
+
+message AnotherSeacher {
+    OuterSearcher.InnerSearcher result = 1;
+}
