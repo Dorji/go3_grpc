@@ -3,13 +3,14 @@ syntax = "proto3";
 package consignment;
 //Обозначение именованного набора полей
 message Request {
-    string body = 1; //тип имя = номер поля;
+    //тип имя = номер поля;
+    string body = 1; 
     int32 age = 2; //тип целый 32 разр //go -> int32
     int64 salary = 3; // тип целый 64 разр // go -> int64
 
 }
 
-message Respone {
+message Response {
     double my_double = 1; //go -> float64
     float my_float = 2; //go -> float32 
 
@@ -47,4 +48,19 @@ message OuterSearcher {
 
 message AnotherSeacher {
     OuterSearcher.InnerSearcher result = 1;
+}
+
+message TimeDate {
+    int32 year = 1;
+    int32 month = 2;
+    int32 day = 3;
+    int32 hour = 4;
+}
+
+//Создаем сервис
+service TestService {
+    //Можно передать в качестве аргумента что-то, а можно и ничего
+    rpc HttpGET(Request) returns (Response) {}
+    rpc HttpPOST(Request) returns (Response) {}
+    rpc CurrentTime(TimeDate) returns (TimeDate) {}
 }
