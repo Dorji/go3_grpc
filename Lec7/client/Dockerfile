@@ -28,9 +28,8 @@ RUN go mod download
 # GOOS - под какое окружение используем компилятор языка Go
 # go build -a -installsuffix cgo - собрать проект с учетом обхода cgo
 # -o server - как назвать выходный бинарник
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server 
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o client 
 # На этом этапе мы имеем ГОРУ ненужного мусора в goruntime + server.bin
-
 
 # 2. Ступень сборки
 # Подготавливаем рабочий контейнер 
@@ -45,7 +44,8 @@ WORKDIR /app
 # Хотим перебросить из контейнера builder
 # Копируем из builder наш erver.bin
 
-COPY --from=builder /app/server .
+ADD command.json /app/command.json
+COPY --from=builder /app/client .
 
 # Запускаем бинарник
-CMD ["./server"]
+CMD ["./client"]

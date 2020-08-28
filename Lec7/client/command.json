@@ -1,0 +1,8 @@
+{
+    "description": "Second file",
+    "weight" : 222, 
+    "containers" : [
+        {"customer_id" : "OOO Containers", "origin" : "Moscow", "user_id" : "OOO USER"}
+    ],
+    "vessel_id" : "Na verkhu"
+}

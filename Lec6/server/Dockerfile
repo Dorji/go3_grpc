@@ -28,7 +28,7 @@ RUN go mod download
 # GOOS - под какое окружение используем компилятор языка Go
 # go build -a -installsuffix cgo - собрать проект с учетом обхода cgo
 # -o server - как назвать выходный бинарник
-RUN CGO_ENABLED=o GOOS=linux go build -a -installsuffix cgo -o server 
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server 
 # На этом этапе мы имеем ГОРУ ненужного мусора в goruntime + server.bin
 
 
