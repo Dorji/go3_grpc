@@ -23,7 +23,7 @@ message Response {
     string my_string = 7; // go -> string //proto2 go -> []byte
 
     bytes my_bytes = 8; //go -> []byte
-
+    //Строго нумерация с нуля!
     enum Things {
         FIRST = 0;
         SECOND = 1;
