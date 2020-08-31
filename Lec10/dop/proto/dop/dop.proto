@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package dop;
+
+//Здесь будут указываться требования для хранения
+//товара
+message Request{
+    int32 capacity = 1;
+    int32 max_weight = 2;
+}
+//Как выглядит ответ (свободные места под хранение товара)
+message Response{
+    Place place = 1;
+    repeated Place places = 2;
+}
+
+//Как выглядит само место для хранения товара
+message Place {
+    string id = 1;
+    int32 capacity = 2;
+    int32 max_weight = 3;
+    string name = 4;
+    //true - свободно, false - занято
+    bool available = 5;
+    string owner_id = 6;
+}
+
+service DopService {
+    rpc FindAvailable(Request) returns (Response) {}
+}
