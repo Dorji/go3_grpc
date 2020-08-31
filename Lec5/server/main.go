@@ -5,14 +5,11 @@ import (
 	"log"
 	"net"
 
+	"github.com/micro/go-micro"
 	pb "github.com/vlasove/Lec5/server/proto/consignment"
 	"google.golang.org/grpc"
 
 	"google.golang.org/grpc/reflection"
-)
-
-const (
-	port = ":50051"
 )
 
 type repository interface {
@@ -58,23 +55,33 @@ func (s *service) GetAllCommands(ctx context.Context, req *pb.GetRequest) (*pb.R
 
 func main() {
 	repo := &Repository{}
+	service := micro.NewService(
+		micro.Name("server.consignment")
+	)
 
+	service.Init()
 	//Настройка gRPC сервера
-	listener, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen port: %v", err)
-	}
+	// listener, err := net.Listen("tcp", port)
+	// if err != nil {
+	// 	log.Fatalf("failed to listen port: %v", err)
+	// }
 
-	server := grpc.NewServer()
+	// server := grpc.NewServer()
 
 	//Регистрируем наш сервис для сервера
 	ourService := &service{repo}
+	if err := pb.RegisterShippingServiceHandler(service.Init(), ourService); err != nil {
+		log.Panic(err)
+	}
 	pb.RegisterShippingServiceServer(server, ourService)
 	//Чтобы выходные параметры сервера сохранялись в go-runtime
-	reflection.Register(server)
+	// reflection.Register(server)
 
-	log.Println("gRPC server running on port:", port)
-	if err := server.Serve(listener); err != nil {
-		log.Fatalf("failed to server from port: %v", err)
+	// log.Println("gRPC server running on port:", port)
+	// if err := server.Serve(listener); err != nil {
+	// 	log.Fatalf("failed to server from port: %v", err)
+	// }
+	if err := service.Run(); err != nil {
+		log.Panic(err)
 	}
 }
