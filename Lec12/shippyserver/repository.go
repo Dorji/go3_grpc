@@ -27,6 +27,9 @@ type Consignment struct {
 	VesselID    string     `json:"vessel_id"`
 }
 
+//MarshalContainer ...
+//Принимает на вход объект *pb.Container и превращает его в *Container
+//изложенный выше (для работы с mongodb)
 func MarshalContainer(container *pb.Container) *Container {
 	return &Container{
 		ID:         container.Id,
@@ -35,6 +38,8 @@ func MarshalContainer(container *pb.Container) *Container {
 	}
 }
 
+//Применяет ко всем объектам из []*pb.Container функцию MarshallContainer
+//возвращает []*Container который уже можно обработать модельными методами
 func MarshalContainerCollection(containers []*pb.Container) []*Container {
 	//К каждому контейнеру из RPC запроса будем применить некую функцию-преобразователь
 	collection := make([]*Container, 0)
@@ -124,24 +129,31 @@ type repository interface {
 	GetAll(ctx context.Context) ([]*Consignment, error)
 }
 
+//Объект, реализующий интерфейс модели
 type MongoRepository struct {
 	collection *mongo.Collection
 }
 
+//Create ...
+//Метод принимает на вход ТО ЧТО НУЖНО СОХРАНИТЬ(В локальном модельном формате) и сохраняет его
 func (repo *MongoRepository) Create(ctx context.Context, consignment *Consignment) error {
 	_, err := repo.collection.InsertOne(ctx, consignment)
 	return err
 }
 
-func (repo *MongtoRepository) GetAll(ctx context.Context) ([]*Consignment, error) {
+//GetAll ...
+//Метод возвращает все ЛОКАЛЬНЫЕ МОДЕЛЬНЫЕ объекты + ошибку
+func (repo *MongoRepository) GetAll(ctx context.Context) ([]*Consignment, error) {
 	cur, err := repo.collection.Find(ctx, nil, nil)
 	var sampleConsignments []*Consignment
 
 	for cur.Next(ctx) {
 		var cons *Consignment
 		if err := cur.Decode(&cons); err != nil {
+			//continue
 			return nil, err
 		}
+		sampleConsignments = append(sampleConsignments, cons)
 	}
 
 	return sampleConsignments, err
