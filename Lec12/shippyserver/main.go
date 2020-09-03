@@ -42,7 +42,7 @@ func main() {
 	//Инициализация модели
 	repo := &MongoRepository{consignmentCollection}
 	//Инициализация клиента для второго сервиса
-	vesselClient := vesselProto.NewVesselServiceClient("shippyclient", service.Client())
+	vesselClient := vesselProto.NewVesselServiceClient("shippyvessel", service.Client())
 	//Инициализация контроллера
 	h := &handler{repo, vesselClient}
 	//Регистрируем нащ сервер с контроллером

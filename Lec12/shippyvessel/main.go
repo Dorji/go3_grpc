@@ -2,63 +2,51 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/micro/go-micro"
 	pb "github.com/vlasove/Lec12/shippyvessel/proto/vessel"
 )
 
-//Repository ...
-type repository interface {
-	FindAvailable(*pb.Specification) (*pb.Vessel, error)
-}
-
-//VesselRepository ...
-type VesselRepository struct {
-	vessels []*pb.Vessel
-}
-
-//FindAvailable ...
-func (repo *VesselRepository) FindAvailable(spec *pb.Specification) (*pb.Vessel, error) {
-	for _, vessel := range repo.vessels {
-		if spec.Capacity <= vessel.Capacity && spec.MaxWeight <= vessel.MaxWeight {
-			return vessel, nil
-		}
-	}
-	return nil, errors.New("No vessel found by that spec")
-}
-
-type service struct {
-	repo repository
-}
-
-func (s *service) FindAvailable(ctx context.Context, req *pb.Specification, res *pb.Response) error {
-
-	vessel, err := s.repo.FindAvailable(req)
-	if err != nil {
-		return err
-	}
-
-	res.Vessel = vessel
-	return nil
-}
+//Хост бд на случай если в процессе запуска не было обнаружено переменной окружения
+//DB_HOST
+const (
+	defaultHost = "datastore:27017"
+)
 
 func main() {
-	vessels := []*pb.Vessel{
-		&pb.Vessel{Id: "vessel001", Name: "Boaty McBoatface", MaxWeight: 200000, Capacity: 500},
-	}
-	repo := &VesselRepository{vessels}
-
-	srv := micro.NewService(
+	//Регистрируем наш сервер в MDNS
+	service := micro.NewService(
 		micro.Name("shippyvessel"),
 	)
+	//захват переменных окружения и инициализация
+	service.Init()
 
-	srv.Init()
+	//Пытаемся считать переменную окружения, а если ее нет - то используем default
+	uri := os.Getenv("DB_HOST")
+	if uri == "" {
+		uri = defaultHost
+	}
+	//Пытаемся подключиться к бд по uri с retry=0
+	client, err := CreateClient(context.Background(), uri, 0)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer client.Disconnect(context.Background())
+	//Создаем коллекцию (аналог таблицы в РСУБД) в БД shippy с названием vessels (аналог названия таблицы)
+	vesselCollection := client.Database("shippy").Collection("vessels")
 
-	pb.RegisterVesselServiceHandler(srv.Server(), &service{repo})
+	//Инициализация модели
+	repo := &MongoRepository{vesselCollection}
 
-	if err := srv.Run(); err != nil {
+	//Инициализация контроллера
+	h := &handler{repo}
+	//Регистрируем нащ сервер с контроллером
+	pb.RegisterVesselServiceHandler(service.Server(), h)
+	//Запускаем наш сервер
+	if err := service.Run(); err != nil {
 		fmt.Println(err)
 	}
 }

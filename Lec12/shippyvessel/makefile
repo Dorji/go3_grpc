@@ -1,6 +1,6 @@
 .PHONY:proto
 proto:
-	protoc -I. --go_out=plugins=micro:. proto/vessel/vessel.proto 
+	protoc --proto_path=. --go_out=. --micro_out=. proto/vessel/vessel.proto
 
 .PHONY:build
 build:
