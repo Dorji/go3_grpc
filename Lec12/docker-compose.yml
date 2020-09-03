@@ -37,6 +37,14 @@ services:
         environment: 
             MICRO_SERVER_ADDRESS: ":50051"
 
+    user:
+        build: ./userserver
+        ports:
+            - 50055:50051
+        environment: 
+            MICRO_SERVER_ADDRESS: ":50051"
+
+
 
     database:
         image: mongo
@@ -49,6 +57,14 @@ services:
         ports:
             - 27017
         command: mongod --logpath=/dev/null
+
+    datastore:
+        image: postgres:alpine 
+        environment:
+            POSTGRES_PASSWORD: "?"
+            POSTGRES_USER: "admin"
+        ports:
+            - 5432:5432 
 
 
 
