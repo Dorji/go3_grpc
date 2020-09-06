@@ -48,6 +48,9 @@ type UserService interface {
 	Get(ctx context.Context, in *User, opts ...client.CallOption) (*Response, error)
 	//Получить всех пользователей
 	GetAll(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
+	//Принимает на вход пользователя какого-то возраста
+	//Возвращает набор пользователей из БД точно такого же возраста
+	GetAllByAge(ctx context.Context, in *User, opts ...client.CallOption) (*Response, error)
 	//Аутентифицрование и валидация
 	Auth(ctx context.Context, in *User, opts ...client.CallOption) (*Token, error)
 	ValidateToken(ctx context.Context, in *Token, opts ...client.CallOption) (*Token, error)
@@ -95,6 +98,16 @@ func (c *userService) GetAll(ctx context.Context, in *Request, opts ...client.Ca
 	return out, nil
 }
 
+func (c *userService) GetAllByAge(ctx context.Context, in *User, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "UserService.GetAllByAge", in)
+	out := new(Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userService) Auth(ctx context.Context, in *User, opts ...client.CallOption) (*Token, error) {
 	req := c.c.NewRequest(c.name, "UserService.Auth", in)
 	out := new(Token)
@@ -124,6 +137,9 @@ type UserServiceHandler interface {
 	Get(context.Context, *User, *Response) error
 	//Получить всех пользователей
 	GetAll(context.Context, *Request, *Response) error
+	//Принимает на вход пользователя какого-то возраста
+	//Возвращает набор пользователей из БД точно такого же возраста
+	GetAllByAge(context.Context, *User, *Response) error
 	//Аутентифицрование и валидация
 	Auth(context.Context, *User, *Token) error
 	ValidateToken(context.Context, *Token, *Token) error
@@ -134,6 +150,7 @@ func RegisterUserServiceHandler(s server.Server, hdlr UserServiceHandler, opts .
 		Create(ctx context.Context, in *User, out *Response) error
 		Get(ctx context.Context, in *User, out *Response) error
 		GetAll(ctx context.Context, in *Request, out *Response) error
+		GetAllByAge(ctx context.Context, in *User, out *Response) error
 		Auth(ctx context.Context, in *User, out *Token) error
 		ValidateToken(ctx context.Context, in *Token, out *Token) error
 	}
@@ -158,6 +175,10 @@ func (h *userServiceHandler) Get(ctx context.Context, in *User, out *Response) e
 
 func (h *userServiceHandler) GetAll(ctx context.Context, in *Request, out *Response) error {
 	return h.UserServiceHandler.GetAll(ctx, in, out)
+}
+
+func (h *userServiceHandler) GetAllByAge(ctx context.Context, in *User, out *Response) error {
+	return h.UserServiceHandler.GetAllByAge(ctx, in, out)
 }
 
 func (h *userServiceHandler) Auth(ctx context.Context, in *User, out *Token) error {
