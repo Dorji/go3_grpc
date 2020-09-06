@@ -1,0 +1,51 @@
+syntax ="proto3";
+
+package user;
+
+message User {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string company = 4;
+    string password = 5;
+    // Add new field
+    int32 age = 6;
+}
+
+message Request{}
+
+message Response {
+    User user = 1;
+    repeated User users = 2;
+    repeated Error errors = 3;
+}
+
+
+message Error {
+    int32 code = 1;
+    string description = 2;
+}
+
+message Token {
+    string token = 1;
+    bool valid = 2;
+    repeated Error errors = 3;
+}
+
+
+service UserService {
+    //Уметь регистрировать/создавать пользователя
+    rpc Create(User) returns (Response) {}
+    //Получать информацию про какого-то пользователя
+    rpc Get(User) returns (Response) {}
+    //Получить всех пользователей
+    rpc GetAll(Request) returns (Response) {}
+    //Принимает на вход пользователя какого-то возраста
+    //Возвращает набор пользователей из БД точно такого же возраста
+    rpc GetAllByAge(User) returns (Response) {}
+
+
+    //Аутентифицрование и валидация
+    rpc Auth(User) returns (Token) {}
+    rpc ValidateToken(Token) returns (Token) {}
+}
