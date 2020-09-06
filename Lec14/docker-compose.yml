@@ -1,0 +1,35 @@
+#docker-compose.yml
+version: '3.5'
+
+# Для сборки - docker-compose build
+# Для запуска сценария - docker-compose up
+# Для запуска отдельных сервисов - docker-compose run <service_name>
+
+services:
+    userserver:
+        restart: always
+        build: ./userserver
+        ports:
+            - 50055:50051
+        environment:
+            MICRO_ADDRESS: ":50051"
+            DB_HOST: "database"
+            DB_USER: "admin"
+            DB_PASSWORD: "password"
+            DB_NAME: "postgres"
+
+    usercli:
+        build: ./usercli
+
+
+
+    database:
+        image: postgres:alpine
+        environment:
+            POSTGRES_PASSWORD: "password"
+            POSTGRES_USER: "admin"
+        ports:
+        - 5431:5432
+
+
+
