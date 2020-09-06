@@ -72,7 +72,6 @@ func (s *handler) Create(ctx context.Context, req *pb.User, res *pb.Response) er
 		return err
 	}
 
-	// Strip the password back out, so's we're not returning it
 	req.Password = ""
 	res.User = req
 

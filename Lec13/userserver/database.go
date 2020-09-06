@@ -8,7 +8,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// NewConnection returns a new database connection instance
 func NewConnection() (*sqlx.DB, error) {
 	host := os.Getenv("DB_HOST")
 	user := os.Getenv("DB_USER")

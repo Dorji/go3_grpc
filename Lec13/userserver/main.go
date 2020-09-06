@@ -20,8 +20,6 @@ const schema = `
 
 func main() {
 
-	// Creates a database connection and handles
-	// closing it again before exit.
 	db, err := NewConnection()
 	if err != nil {
 		log.Panic(err)
@@ -33,30 +31,23 @@ func main() {
 		log.Fatalf("Could not connect to DB: %v", err)
 	}
 
-	// Run schema query on start-up, as we're using "create if not exists"
-	// this will only be ran once. In order to create updates, you'll need to
-	// use a migrations library
 	db.MustExec(schema)
 
 	repo := NewPostgresRepository(db)
 
 	tokenService := &TokenService{repo}
 
-	// Create a new service. Optionally include some options here.
 	service := micro.NewService(
 		micro.Name("userserver"),
 		micro.Version("latest"),
 	)
 
-	// Init will parse the command line flags.
 	service.Init()
 
-	// Register handler
 	if err := pb.RegisterUserServiceHandler(service.Server(), &handler{repo, tokenService}); err != nil {
 		log.Panic(err)
 	}
 
-	// Run the server
 	if err := service.Run(); err != nil {
 		log.Panic(err)
 	}

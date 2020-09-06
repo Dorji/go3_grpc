@@ -17,14 +17,13 @@ func createUser(ctx context.Context, service micro.Service, user *proto.User) er
 		return err
 	}
 
-	// print the response
 	fmt.Println("Response: ", rsp.User)
 
 	return nil
 }
 
 func main() {
-	// create and initialise a new service
+
 	service := micro.NewService(
 		micro.Flags(
 			&cli.StringFlag{
