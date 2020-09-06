@@ -2,75 +2,63 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/micro/cli/v2"
 	"github.com/micro/go-micro/v2"
-	proto "github.com/vlasove/Lec13/usercli/proto/user"
+	microclient "github.com/micro/go-micro/v2/client"
+	pb "github.com/vlasove/Lec14/usercli/proto/user"
 )
-
-func createUser(ctx context.Context, service micro.Service, user *proto.User) error {
-	client := proto.NewUserService("userserver", service.Client())
-	rsp, err := client.Create(ctx, user)
-	//respUsers, err := client.GetAll(ctx, &proto.Request{})
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Response: ", rsp.User)
-	//fmt.Println("All users in database:", respUsers.Users)
-
-	return nil
-}
 
 func main() {
 
-	service := micro.NewService(
-		micro.Flags(
-			&cli.StringFlag{
-				Name:  "name",
-				Usage: "Your Name",
-			},
-			&cli.StringFlag{
-				Name:  "email",
-				Usage: "E-Mail",
-			},
-			&cli.StringFlag{
-				Name:  "company",
-				Usage: "Company Name",
-			},
-			&cli.StringFlag{
-				Name:  "password",
-				Usage: "Password",
-			},
-		),
+	srv := micro.NewService(
+
+		micro.Name("usercli"),
+		micro.Version("latest"),
 	)
 
-	service.Init(
-		micro.Action(func(c *cli.Context) error {
-			log.Println(c)
-			name := c.String("name")
-			email := c.String("email")
-			company := c.String("company")
-			password := c.String("password")
+	srv.Init()
 
-			log.Println("test:", name, email, company, password)
+	//создаем функционал клиента
+	client := pb.NewUserService("userserver", microclient.DefaultClient)
 
-			ctx := context.Background()
-			user := &proto.User{
-				Name:     name,
-				Email:    email,
-				Company:  company,
-				Password: password,
-			}
+	////Кого будем скармливать БД
+	name := "Evgen Petrov"
+	email := "evgeny_vlasov@gmail.com"
+	password := "123456789q"
+	company := "Evgen.IO"
 
-			if err := createUser(ctx, service, user); err != nil {
-				log.Println("error creating user: ", err.Error())
-				return err
-			}
+	user := &pb.User{
+		Name:     name,
+		Email:    email,
+		Password: password,
+		Company:  company,
+	}
+	//Доабвляем юзера в БД
+	resp, err := client.Create(context.TODO(), user)
+	if err != nil {
+		log.Fatalf("could not create user: %v", err)
+	}
 
-			return nil
-		}),
-	)
+	log.Printf("User created: %s", resp.User.Name)
+
+	allUsers, err := client.GetAll(context.TODO(), &pb.Request{})
+	if err != nil {
+		log.Fatalf("DB empty/could not listing all users")
+	}
+
+	log.Printf("Find %v users in DB", allUsers)
+	//RPC вызов аутентификации (пытается найти юзера по емейл в БД)
+	securityUser := &pb.User{
+		Email:    email,
+		Password: password,
+	}
+	authResponse, err := client.Auth(context.TODO(), securityUser)
+	if err != nil {
+		log.Fatalf("can not auth for user: %v", err)
+	}
+	//В случае если все ок - выбитый токен кидаем в log
+	log.Printf("Access token: %s     \n", authResponse.Token)
+	return
+
 }

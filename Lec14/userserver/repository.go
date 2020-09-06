@@ -5,7 +5,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	uuid "github.com/satori/go.uuid"
-	pb "github.com/vlasove/Lec13/userserver/proto/user"
+	pb "github.com/vlasove/Lec14/userserver/proto/user"
 )
 
 type User struct {

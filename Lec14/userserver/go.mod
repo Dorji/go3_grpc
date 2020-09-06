@@ -1,9 +1,8 @@
-module github.com/vlasove/Lec13/userserver
+module github.com/vlasove/Lec14/userserver
 
 go 1.15
 
 require (
-	github.com/EwanValentine/shippy/shippy-service-user v0.0.0-20200612174527-3ad7cf4c07aa
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang/protobuf v1.4.2
 	github.com/jmoiron/sqlx v1.2.0
