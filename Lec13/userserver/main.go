@@ -7,52 +7,57 @@ import (
 	pb "github.com/vlasove/Lec13/userserver/proto/user"
 )
 
-// message User {
-//     string id = 1;
-//     string name = 2;
-//     string email = 3;
-//     string company = 4;
-//     string password = 5;
-// }
-
-const TableScheme = `
+const schema = `
 	create table if not exists users (
-		id varchar(30) primary key not null,
+		id varchar(36) not null,
 		name varchar(125) not null,
-		email varchar(125) not null,
-		password varchar(256) not null,
-		company varchar(125)
+		email varchar(225) not null unique,
+		password varchar(225) not null,
+		company varchar(125),
+		primary key (id)
 	);
 `
 
 func main() {
+
+	// Creates a database connection and handles
+	// closing it again before exit.
 	db, err := NewConnection()
 	if err != nil {
-		log.Fatalf("Could not connect to DB: %v", err)
 		log.Panic(err)
 	}
+
 	defer db.Close()
 
-	db.MustExec(TableScheme)
+	if err != nil {
+		log.Fatalf("Could not connect to DB: %v", err)
+	}
+
+	// Run schema query on start-up, as we're using "create if not exists"
+	// this will only be ran once. In order to create updates, you'll need to
+	// use a migrations library
+	db.MustExec(schema)
 
 	repo := NewPostgresRepository(db)
 
 	tokenService := &TokenService{repo}
 
+	// Create a new service. Optionally include some options here.
 	service := micro.NewService(
 		micro.Name("userserver"),
 		micro.Version("latest"),
 	)
 
+	// Init will parse the command line flags.
 	service.Init()
 
-	controller := &handler{repo, tokenService}
-	if err := pb.RegisterUserServiceHandler(service.Server(), controller); err != nil {
+	// Register handler
+	if err := pb.RegisterUserServiceHandler(service.Server(), &handler{repo, tokenService}); err != nil {
 		log.Panic(err)
 	}
 
+	// Run the server
 	if err := service.Run(); err != nil {
 		log.Panic(err)
 	}
-
 }

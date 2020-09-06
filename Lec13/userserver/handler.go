@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
-
-	"golang.org/x/crypto/bcrypt"
 
 	pb "github.com/vlasove/Lec13/userserver/proto/user"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type authable interface {
@@ -15,80 +13,82 @@ type authable interface {
 	Encode(user *pb.User) (string, error)
 }
 
-//Контроллер
 type handler struct {
 	repository   Repository
 	tokenService authable
 }
 
-func (s *handler) Create(ctx context.Context, in *pb.User, out *pb.Response) error {
-	log.Println("user:", in)
-	hashedPass, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+func (s *handler) Get(ctx context.Context, req *pb.User, res *pb.Response) error {
+	result, err := s.repository.Get(ctx, req.Id)
 	if err != nil {
 		return err
 	}
-	//Присланному юзеру перетираем пароль
-	in.Password = string(hashedPass)
 
-	if err := s.repository.Create(ctx, MarshallUser(in)); err != nil {
-		return err
-	}
-	//Убираем пароль у пользователя котоырй пойдет в ответ
-	in.Password = ""
-	out.User = in
+	user := UnmarshalUser(result)
+	res.User = user
+
 	return nil
-
 }
 
-func (s *handler) Get(ctx context.Context, in *pb.User, out *pb.Response) error {
-	result, err := s.repository.Get(ctx, in.Id)
-	if err != nil {
-		return err
-	}
-	user := UnmarshallUser(result)
-	out.User = user
-	return nil
-
-}
-
-func (s *handler) GetAll(ctx context.Context, in *pb.Request, out *pb.Response) error {
+func (s *handler) GetAll(ctx context.Context, req *pb.Request, res *pb.Response) error {
 	results, err := s.repository.GetAll(ctx)
 	if err != nil {
 		return err
 	}
-	users := UnmarshallUserCollection(results)
-	out.Users = users
+
+	users := UnmarshalUserCollection(results)
+	res.Users = users
+
 	return nil
 }
 
-func (s *handler) Auth(ctx context.Context, in *pb.User, out *pb.Token) error {
-	//Пытаемся узнать есть ли в БД юзер с таким адресом почты
-	user, err := s.repository.GetByEmail(ctx, in.Email)
+func (s *handler) Auth(ctx context.Context, req *pb.User, res *pb.Token) error {
+	user, err := s.repository.GetByEmail(ctx, req.Email)
 	if err != nil {
 		return err
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(in.Password)); err != nil {
-		return err
-	}
-	//Подготавливаем токен
-	token, err := s.tokenService.Encode(in)
-	if err != nil {
-		return err
-	}
-	out.Token = token
-	return nil
 
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		return err
+	}
+
+	token, err := s.tokenService.Encode(req)
+	if err != nil {
+		return err
+	}
+
+	res.Token = token
+	return nil
 }
 
-func (s *handler) ValidateToken(ctx context.Context, in *pb.Token, out *pb.Token) error {
-	claims, err := s.tokenService.Decode(in.Token)
+func (s *handler) Create(ctx context.Context, req *pb.User, res *pb.Response) error {
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
+
+	req.Password = string(hashedPass)
+	if err := s.repository.Create(ctx, MarshalUser(req)); err != nil {
+		return err
+	}
+
+	// Strip the password back out, so's we're not returning it
+	req.Password = ""
+	res.User = req
+
+	return nil
+}
+
+func (s *handler) ValidateToken(ctx context.Context, req *pb.Token, res *pb.Token) error {
+	claims, err := s.tokenService.Decode(req.Token)
+	if err != nil {
+		return err
+	}
+
 	if claims.User.Id == "" {
-		return errors.New("invalid user/token pair, try Auth again")
+		return errors.New("invalid user")
 	}
 
-	out.Valid = true
+	res.Valid = true
 	return nil
 }

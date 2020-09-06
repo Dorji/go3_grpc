@@ -1,25 +1,25 @@
-FROM golang:1.13-alpine as builder 
+FROM golang:alpine as builder
 
-RUN apk update && apk upgrade && apk add --no-cache git 
+RUN apk update && apk upgrade && \
+    apk add --no-cache git
 
 RUN mkdir /app
-WORKDIR /app 
+WORKDIR /app
 
-ENV G0111MODULE=on
+ENV GO111MODULE=on
 
 COPY . .
 
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o userserver
 
-
-FROM alpine:latest 
+# Run container
+FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
-RUN mkdir /app 
-WORKDIR /app 
+RUN mkdir /app
+WORKDIR /app
 COPY --from=builder /app/userserver .
 
 CMD ["./userserver"]
-

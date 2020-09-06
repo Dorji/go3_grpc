@@ -12,33 +12,36 @@ import (
 
 func createUser(ctx context.Context, service micro.Service, user *proto.User) error {
 	client := proto.NewUserService("userserver", service.Client())
-	response, err := client.Create(ctx, user)
+	rsp, err := client.Create(ctx, user)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Response:", response.User)
+
+	// print the response
+	fmt.Println("Response: ", rsp.User)
+
 	return nil
 }
 
 func main() {
+	// create and initialise a new service
 	service := micro.NewService(
-		//Информацию о пользователе забираем из командной строки в качестве cli параметров при запуске контейнера
 		micro.Flags(
 			&cli.StringFlag{
 				Name:  "name",
-				Usage: "Your name",
+				Usage: "Your Name",
 			},
 			&cli.StringFlag{
 				Name:  "email",
-				Usage: "Your email",
+				Usage: "E-Mail",
 			},
 			&cli.StringFlag{
 				Name:  "company",
-				Usage: "Your company",
+				Usage: "Company Name",
 			},
 			&cli.StringFlag{
 				Name:  "password",
-				Usage: "Your password",
+				Usage: "Password",
 			},
 		),
 	)
@@ -52,6 +55,7 @@ func main() {
 			password := c.String("password")
 
 			log.Println("test:", name, email, company, password)
+
 			ctx := context.Background()
 			user := &proto.User{
 				Name:     name,
@@ -59,10 +63,12 @@ func main() {
 				Company:  company,
 				Password: password,
 			}
+
 			if err := createUser(ctx, service, user); err != nil {
-				log.Println("error while user creation:", err.Error())
+				log.Println("error creating user: ", err.Error())
 				return err
 			}
+
 			return nil
 		}),
 	)
