@@ -13,11 +13,13 @@ import (
 func createUser(ctx context.Context, service micro.Service, user *proto.User) error {
 	client := proto.NewUserService("userserver", service.Client())
 	rsp, err := client.Create(ctx, user)
+	respUsers, err := client.GetAll(ctx, &proto.Request{})
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("Response: ", rsp.User)
+	fmt.Println("All users in database:", respUsers.Users)
 
 	return nil
 }
