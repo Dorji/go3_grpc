@@ -1,6 +1,6 @@
 # 1. Ступень сборки
 # Сборка на основе goruntime
-FROM golang:alpine as builder 
+FROM golang:1.13-alpine as builder 
 
 
 # Обновляю конфиги слепка ОС в конейтенере
